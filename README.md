@@ -337,6 +337,5 @@ python test_recognition.py             # 逐张打印识别结果，人工观察
 
 [MIT](./LICENSE) © 2026 Tangtc
 
-> 第三方组件：HyperLPR3（Apache-2.0，其 ONNX 模型随仓库分发）、Ultralytics YOLOv8
-> （AGPL-3.0，权重未随仓库分发）。`data/images/` 中的真实车牌照片仅用于识别效果验证，
-> 版权归原拍摄者，不在 MIT 授权范围内。
+第三方组件（HyperLPR3 的 Apache-2.0、可选依赖 YOLOv8 的 AGPL-3.0、以及
+`data/images/` 真实车牌照片的版权归属）详见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。

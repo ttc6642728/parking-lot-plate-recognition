@@ -29,12 +29,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-import cv2
-import numpy as np
+# 必须早于任何 print：CI（英文 Windows）的控制台是 cp1252，
+# 直接打印中文会抛 UnicodeEncodeError，表现为"退出码 1"而非断言失败。
+from utils.console import ensure_utf8_stdout  # noqa: E402
 
-from config import IMAGES_DIR
-from utils.image_utils import load_image
-import core.plate_recognizer as recognizer_module
+ensure_utf8_stdout()
+
+import cv2  # noqa: E402
+import numpy as np  # noqa: E402
+
+from config import IMAGES_DIR  # noqa: E402
+from utils.image_utils import load_image  # noqa: E402
+import core.plate_recognizer as recognizer_module  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

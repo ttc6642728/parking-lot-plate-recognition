@@ -12,13 +12,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-# 修复 Windows 控制台中文乱码（GBK 终端输出 UTF-8 会乱码）
-if sys.platform == "win32":
-    for _s in (sys.stdout, sys.stderr):
-        try:
-            _s.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
+from utils.console import ensure_utf8_stdout
+
+ensure_utf8_stdout()
 
 from config import (TESSERACT_DIR, TESSERACT_CMD, TESSDATA_DIR,
                     TESSERACT_LANG, YOLO_WEIGHTS, IMAGES_DIR,

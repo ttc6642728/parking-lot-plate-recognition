@@ -12,6 +12,10 @@ jobs:
     # 用 Windows 而不是 ubuntu：本项目是 Windows 桌面程序，
     # 且 onnxruntime 与 PyQt5 的 DLL 加载顺序在 Windows 上才有特殊性。
     runs-on: windows-latest
+    env:
+      # 英文版 Windows 的管道默认按 cp1252 编码 stdout，
+      # 脚本打印中文会抛 UnicodeEncodeError。脚本内已各自兜底，这里再保险一次。
+      PYTHONUTF8: "1"
     strategy:
       fail-fast: false
       matrix:

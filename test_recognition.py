@@ -10,11 +10,9 @@ from __future__ import annotations
 import sys
 import time
 
-for s in (sys.stdout, sys.stderr):
-    try:
-        s.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+from utils.console import ensure_utf8_stdout
+
+ensure_utf8_stdout()
 
 from core import PlateRecognizer
 from core.template_ocr import TemplateOcr

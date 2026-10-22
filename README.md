@@ -226,6 +226,10 @@ python test_recognition.py             # 逐张打印识别结果，人工观察
 `eval_recognition.py` 的真值表在 `data/labels.json`；`--augment` 会对真实照片生成
 17 种退化样本（旋转 / 亮度 / 模糊 / 缩放 / 噪声 / 组合），用于量化抗干扰能力。
 
+> 若机器上没有黑体（如 GitHub Actions 的 Windows runner），内置模板引擎会跳过 8 项
+> 字体相关用例，输出变为 `71 passed, 9 skipped`——这是**预期行为**，原因见
+> [7.1](#71-已知问题) 最后一条。
+
 ### 5.5 常见问题
 
 | 现象 | 原因与处理 |
@@ -269,10 +273,10 @@ python test_recognition.py             # 逐张打印识别结果，人工观察
 │   └── dao/
 │
 ├── auth/                    # 登录、角色、密码哈希
-├── utils/                   # 日志、图像工具、时间、导出
+├── utils/                   # 日志、图像工具、时间、导出、字体定位
 ├── tests/                   # pytest（79 项）
 ├── models/hyperlpr3/        # 4 个 ONNX 权重，随仓库分发
-├── data/images/             # 测试样例图 + labels.json 真值表
+├── data/images/             # 测试样例图 + labels.json 真值表 + render_info.json 字体签名
 ├── docs/                    # 深度文档 + 界面截图
 └── .github/workflows/       # CI：pytest + 准确率回归
 ```
@@ -289,6 +293,7 @@ python test_recognition.py             # 逐张打印识别结果，人工观察
 | 车牌类型覆盖有限 | 只支持蓝牌 / 黄牌，未处理新能源绿牌、双层黄牌 |
 | 单机 SQLite | 未做并发写入压力测试，多终端场景不适用（课程设计范围内可接受） |
 | 仅在 Windows 验证 | macOS / Linux 需自行调整摄像头后端与 Tesseract 路径，代码里已留回退分支 |
+| 内置模板引擎依赖「黑体」字形 | 模板匹配要求样例图与模板同字体。GitHub Actions 的 Windows 镜像**没有 `simhei.ttf`**，会回落到微软雅黑，此时合成样例图的 8/B、W/P 归一化后互相混淆（实测 6 张错 3~4 张）。测试读 `data/images/render_info.json` 里的字体签名，不一致即跳过；CI 的准确率门槛在这种情况下只校验真实照片 |
 | 默认口令写在 config | 演示方便，但部署前必须改，见 `DEFAULT_USERS` |
 
 ### 7.2 后续规划

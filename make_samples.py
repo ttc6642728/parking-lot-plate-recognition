@@ -8,15 +8,22 @@
 会在 data/images/ 下生成若干张"照片 + 车牌"的合成图。
 """
 
-from pathlib import Path
+import json
+import sys
 
 import cv2
 import numpy as np
 
 from config import IMAGES_DIR
+from utils.font_utils import find_cjk_font, font_name
 
 IMG_DIR = IMAGES_DIR
 IMG_DIR.mkdir(parents=True, exist_ok=True)
+
+# 与模板 OCR 共用同一份字体列表（utils/font_utils.py）。
+# 样例图必须用「当前机器上模板也会选中的那个字体」渲染，
+# 否则归一化后的字形差异会把 浙 认成 渝、川 认成 甘。
+FONT_PATH = find_cjk_font()
 
 # 常见的车牌配色
 PLATE_COLORS = {
@@ -41,44 +48,29 @@ def _put_cn(img, text, org, color, scale):
     from PIL import Image, ImageDraw, ImageFont
     pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(pil)
-    # 尝试找系统中文字体
+
     font = None
-    for fp in (
-            r"C:\Windows\Fonts\simhei.ttf",
-            r"C:\Windows\Fonts\msyh.ttc",
-            r"C:\Windows\Fonts\simsun.ttc",
-            "/System/Library/Fonts/PingFang.ttc",
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ):
-        if Path(fp).exists():
-            try:
-                font = ImageFont.truetype(fp, int(scale * 40))
-                break
-            except Exception:
-                continue
+    if FONT_PATH:
+        try:
+            font = ImageFont.truetype(FONT_PATH, int(scale * 40))
+        except Exception:
+            font = None
     if font is None:
         font = ImageFont.load_default()
     draw.text(org, text, font=font, fill=color[::-1])   # RGB
     return cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
 
 
-def _render_char(ch: str, target_h: int, color_bgr):
+def _render_char(ch: str, target_h: int, color_bgr, font_path: str | None = None):
     """用 PIL 渲染单个字符，缩放至指定高度，返回彩色 BGR 图。"""
     from PIL import Image, ImageDraw, ImageFont
 
-    font = None
-    for fp in (r"C:\Windows\Fonts\simhei.ttf",
-               r"C:\Windows\Fonts\msyh.ttc",
-               r"C:\Windows\Fonts\simsun.ttc",
-               "/System/Library/Fonts/PingFang.ttc",
-               "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"):
-        if Path(fp).exists():
-            try:
-                font = ImageFont.truetype(fp, 96)
-                break
-            except Exception:
-                continue
-    if font is None:
+    path = font_path or FONT_PATH
+    if not path:
+        return None
+    try:
+        font = ImageFont.truetype(path, 96)
+    except Exception:
         return None
 
     img = Image.new("L", (200, 200), 0)
@@ -102,7 +94,7 @@ def _render_char(ch: str, target_h: int, color_bgr):
     return bgr
 
 
-def draw_plate(plate_text: str, style="blue"):
+def draw_plate(plate_text: str, style="blue", font_path: str | None = None):
     """
     绘制一块标准比例车牌（440x140）。
     7 个字符等距排列 —— 与真实车牌布局一致，
@@ -123,7 +115,7 @@ def draw_plate(plate_text: str, style="blue"):
     y0 = (H - CH_H) // 2
 
     for i, ch in enumerate(plate_text[:7]):
-        cimg = _render_char(ch, CH_H, fg)
+        cimg = _render_char(ch, CH_H, fg, font_path)
         if cimg is None:
             continue
         ch_h, ch_w = cimg.shape[:2]
@@ -139,7 +131,7 @@ def draw_plate(plate_text: str, style="blue"):
     return plate
 
 
-def compose(plate_text: str, style="blue", idx=0):
+def compose(plate_text: str, style="blue", idx=0, font_path: str | None = None):
     """把车牌贴到一个模拟的'车身'背景上。"""
     h, w = 560, 860
     # 车身背景（不同颜色模拟不同车）
@@ -155,7 +147,7 @@ def compose(plate_text: str, style="blue", idx=0):
     # 地面
     body[h - 90:, :] = (70, 70, 75)
 
-    plate_img = draw_plate(plate_text, style)
+    plate_img = draw_plate(plate_text, style, font_path)
     ph, pw = plate_img.shape[:2]
 
     # 车牌放在车身中下部（模拟前/后保险杠位置）
@@ -173,7 +165,7 @@ def random_x(idx):
 
 def main():
     for i, (text, style) in enumerate(PLATES):
-        img = compose(text, style, i)
+        img = compose(text, style, i, FONT_PATH)
         out = IMG_DIR / f"test_plate_{i + 1}.png"
         # 用 imencode + tofile 保存，规避 OpenCV 对中文路径的支持问题
         ok, buf = cv2.imencode(".png", img)
@@ -183,6 +175,19 @@ def main():
 
     print(f"\n共 {len(PLATES)} 张，已保存到 {IMG_DIR}")
 
+    # 记录渲染字体：测试据此判断「样例图是否与当前模板同字体」。
+    # 字体不一致时模板匹配必然出错，应跳过而不是误报失败。
+    info = {
+        "font": font_name(FONT_PATH),
+        "font_path": FONT_PATH,
+        "char_height": 90,
+        "plates": [t for t, _ in PLATES],
+    }
+    (IMG_DIR / "render_info.json").write_text(
+        json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"字体签名已写入 {IMG_DIR / 'render_info.json'}")
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

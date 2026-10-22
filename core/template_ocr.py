@@ -66,14 +66,10 @@ def _to_canvas(bin_img: np.ndarray) -> np.ndarray | None:
     return out
 
 
-# 常见中文字体候选（按顺序尝试）
-_FONT_CANDIDATES = [
-    r"C:\Windows\Fonts\simhei.ttf",      # 黑体（车牌字体接近黑体）
-    r"C:\Windows\Fonts\msyh.ttc",        # 微软雅黑
-    r"C:\Windows\Fonts\simsun.ttc",      # 宋体
-    "/System/Library/Fonts/PingFang.ttc",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-]
+# 常见中文字体候选（按顺序尝试）。
+# 与 make_samples.py 共用 utils/font_utils.py 的同一份列表：
+# 样例图与模板必须同字体，否则形近字会被混淆（详见该模块注释）。
+from utils.font_utils import FONT_CANDIDATES as _FONT_CANDIDATES, find_cjk_font
 
 
 class TemplateOcr:
@@ -95,10 +91,18 @@ class TemplateOcr:
     # ------------------------------------------------------------------
     @staticmethod
     def _find_font() -> str | None:
-        for f in _FONT_CANDIDATES:
-            if Path(f).exists():
-                return f
-        return None
+        return find_cjk_font()
+
+    @property
+    def font_path(self) -> str:
+        """构建模板所用的字体文件路径（未找到时为空串）。"""
+        return self._font or ""
+
+    @property
+    def font_name(self) -> str:
+        """字体文件名，用于与样例图的字体签名比对。"""
+        from utils.font_utils import font_name as _name
+        return _name(self._font)
 
     def _render(self, ch: str) -> np.ndarray | None:
         """把单个字符渲染成二值图（白字黑底）。"""

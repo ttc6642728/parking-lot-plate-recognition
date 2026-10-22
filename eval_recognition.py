@@ -110,6 +110,7 @@ def run_suite(rows: list[dict], mode: str) -> list[dict]:
             "ok": r.best_plate == item["plate"],
             "conf": r.confidence_of_best,
             "engine": r.engine,
+            "type": item["type"],
         })
     return out
 
@@ -173,6 +174,28 @@ def print_table(title: str, runs: dict[str, list[dict]]):
 
 
 # ---------------------------------------------------------------------------
+def samples_font_mismatch() -> str:
+    """合成样例图的渲染字体与当前模板字体是否不一致。
+
+    内置模板匹配依赖「样例图与模板同字体」（见 utils/font_utils.py）。
+    GitHub Actions 的 Windows 镜像没有黑体，落回微软雅黑后合成样本必然失准，
+    因此这种情况下门槛只校验真实照片，避免把环境差异误判成代码回归。
+    """
+    info = IMAGES_DIR / "render_info.json"
+    if not info.exists():
+        return ""
+    try:
+        recorded = json.loads(info.read_text(encoding="utf-8")).get("font", "")
+    except Exception:
+        return ""
+    from utils.font_utils import find_cjk_font, font_name
+
+    current = font_name(find_cjk_font())
+    if recorded and current and recorded != current:
+        return f"合成样例图由 {recorded} 渲染，本机模板用 {current}"
+    return ""
+
+
 def main():
     parser = argparse.ArgumentParser(description="车牌识别准确率评估")
     parser.add_argument("--mode", choices=["auto", "builtin", "hyperlpr3"],
@@ -199,6 +222,14 @@ def main():
     if args.fail_below > 0:
         checked = "auto" if "auto" in base_runs else modes[-1]
         result = base_runs[checked]
+
+        mismatch = samples_font_mismatch()
+        if mismatch:
+            real_only = [r for r in result if r.get("type") == "real"]
+            if real_only:
+                print(f"\n[提示] {mismatch}，合成样本不参与门槛校验")
+                result = real_only
+
         acc = sum(1 for r in result if r["ok"]) / max(1, len(result))
         if acc < args.fail_below:
             print(f"\n[FAIL] {checked} 基础集准确率 {acc:.1%} "

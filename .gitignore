@@ -1,0 +1,67 @@
+# ---------------- Python ----------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+build/
+dist/
+
+# ---------------- 虚拟环境 ----------------
+venv/
+.venv/
+env/
+ENV/
+
+# ---------------- IDE / 编辑器 ----------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---------------- 本项目运行时产物 ----------------
+# 数据库是首次运行自动生成的，里面含用户数据，绝不入库
+db/parking.db
+db/parking.db-journal
+db/parking.db-wal
+db/parking.db-shm
+logs/
+*.log
+
+# ---------------- 工具 / 生成物 ----------------
+# AI 协作工具的工作目录（开发日志，不属于源码）
+.workbuddy/
+# make_preview.py 生成的网页预览
+preview.html
+# 文档导出的 PDF / Word（内容以 .md 为准，避免两份不一致）
+docs/*.pdf
+docs/*.docx
+# 提交材料压缩包
+*.zip
+*.rar
+*.7z
+
+# ---------------- 模型权重 ----------------
+# YOLOv8n 权重 6.3MB，非必需（缺失时自动降级到 OpenCV 定位）
+models/*.pt
+!models/.gitkeep
+!models/README.md
+*.part
+.yolov8n.pt.*
+
+# ---------------- 仅本地素材 ----------------
+# 网络下载的真实车牌照片：未纳入 data/labels.json 真值表，无复现价值，
+# 且涉及他人车牌隐私，刻意不入库（本地保留，随时可再取）。
+data/images/25dfc56cc21a3cedbcd7fbf941d53d65.jpeg
+data/images/v2-127046d29d95f97015b10b9e3287d88e_b.jpg
+
+# ---------------- 测试与缓存 ----------------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+tests/__pycache__/

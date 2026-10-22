@@ -1,0 +1,30 @@
+# 统一换行与二进制判定
+# 目的：避免 Windows（CRLF）与 Linux/macOS（LF）混用导致每个文件都显示"已修改"
+* text=auto eol=lf
+
+*.py    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.sql   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.toml  text eol=lf
+*.bat   text eol=crlf
+*.ps1   text eol=crlf
+
+# 二进制：不做换行转换，也不在 diff 里展开
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.bmp   binary
+*.ico   binary
+*.onnx  binary
+*.pt    binary
+*.db    binary
+*.pdf   binary
+*.zip   binary
+
+# GitHub 语言统计：把文档类文件排除，避免仓库被识别成"以 Markdown 为主"
+docs/** linguist-documentation
+*.md    linguist-documentation

@@ -18,10 +18,10 @@ jobs:
         python-version: ["3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: 配置 Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -37,7 +37,18 @@ jobs:
         run: python check_env.py || true
 
       - name: 运行单元测试
-        run: python -m pytest tests -q --maxfail=1
+        # 失败时把关键行写进注解与 Job Summary，便于在网页上直接看到原因
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest tests -q --maxfail=1 2>&1 | tee pytest.log
+          status=$?
+          if [ $status -ne 0 ]; then
+            detail=$(grep -E '^(FAILED|E  )' pytest.log | head -6 | tr '\n' ' ')
+            echo "::error title=pytest 失败::${detail:-见 Job Summary}"
+            { echo '### pytest 失败输出'; echo '```'; tail -60 pytest.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            exit $status
+          fi
 
       - name: 识别准确率回归
         # 双引擎仲裁的核心指标：基础测试集 7 张必须全部识别正确

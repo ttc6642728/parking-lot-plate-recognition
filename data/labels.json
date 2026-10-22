@@ -1,0 +1,16 @@
+{
+  "_说明": "真实/合成测试图的真值表，供 eval_recognition.py 计算准确率使用",
+  "_类型": {
+    "real": "真实拍摄照片（带车身背景）",
+    "synthetic": "程序渲染的车牌合成图"
+  },
+  "images": [
+    {"file": "1KS31404-0.jpg",     "plate": "冀T15888", "type": "real"},
+    {"file": "test_plate_1.png", "plate": "京A8X3K7", "type": "synthetic"},
+    {"file": "test_plate_2.png", "plate": "沪B5M2N9", "type": "synthetic"},
+    {"file": "test_plate_3.png", "plate": "粤C3Q8L1", "type": "synthetic"},
+    {"file": "test_plate_4.png", "plate": "苏D9K4R6", "type": "synthetic"},
+    {"file": "test_plate_5.png", "plate": "浙E7T1V5", "type": "synthetic"},
+    {"file": "test_plate_6.png", "plate": "川F2H6W8", "type": "synthetic"}
+  ]
+}

@@ -8,6 +8,8 @@
 [![Tests](https://img.shields.io/badge/tests-79%20passed-brightgreen.svg)](./tests)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white)](#环境要求)
 
+> 课程设计项目，独立完成需求分析、识别方案设计、界面实现、测试与文档。2026
+
 一个可离线运行的停车场管理系统：**开源双引擎车牌识别 + 入场/出场计费 + 会员与黑名单 + 数据看板**，
 桌面端基于 PyQt5，数据落在本地 SQLite，不依赖任何云服务。
 

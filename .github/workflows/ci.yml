@@ -7,6 +7,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     # 用 Windows 而不是 ubuntu：本项目是 Windows 桌面程序，
@@ -41,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          python -m pytest tests -q --maxfail=1 2>&1 | tee pytest.log
+          python -m pytest tests -q 2>&1 | tee pytest.log
           status=$?
           if [ $status -ne 0 ]; then
             detail=$(grep -E '^(FAILED|E  )' pytest.log | head -6 | tr '\n' ' ')
@@ -49,6 +52,19 @@ jobs:
             { echo '### pytest 失败输出'; echo '```'; tail -60 pytest.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
             exit $status
           fi
+
+      - name: 上传失败日志到 ci-debug 分支
+        # 仅在失败时执行：便于在无 GitHub 登录态的环境里排查
+        if: failure()
+        shell: bash
+        run: |
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git checkout -b ci-debug
+          cp pytest.log ci-pytest.log 2>/dev/null || true
+          git add -f ci-pytest.log
+          git commit -m "ci: 失败日志（临时分支）"
+          git push -f origin ci-debug
 
       - name: 识别准确率回归
         # 双引擎仲裁的核心指标：基础测试集 7 张必须全部识别正确
